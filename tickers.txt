@@ -1,0 +1,5 @@
+AAPL
+GOOG
+PFE
+NIO
+CSCO
