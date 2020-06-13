@@ -24,16 +24,19 @@ def analyze_2008(ax, ticker):
     close_prices_filtered = smart_filter(close_prices, sigma=20.0)
     plot_simple(ax, close_prices_filtered, color='tab:orange')
 
-    # Find the landmarks
-    major_peak_ix, minor_trough_ix, major_trough_ix = get_landmarks_2008(close_prices_filtered, close_prices,
-                                                                         local_window_size=41,
-                                                                         peak_window_size=11,
-                                                                         min_trough_distance=1)
-    plot_landmarks_2008(ax, close_prices, major_peak_ix, minor_trough_ix, major_trough_ix)
+    try:
+        # Find the landmarks
+        major_peak_ix, minor_trough_ix, major_trough_ix = get_landmarks_2008(close_prices_filtered, close_prices,
+                                                                             local_window_size=41,
+                                                                             peak_window_size=11,
+                                                                             min_trough_distance=1)
+        plot_landmarks_2008(ax, close_prices, major_peak_ix, minor_trough_ix, major_trough_ix)
 
-    peak_ixs, troughs_ixs = find_peaks_troughs(close_prices_filtered, window_size=5)
-    plot_points(ax, close_prices_filtered, peak_ixs, color='r')
-    plot_points(ax, close_prices_filtered, troughs_ixs, color='b')
+        peak_ixs, troughs_ixs = find_peaks_troughs(close_prices_filtered, window_size=5)
+        plot_points(ax, close_prices_filtered, peak_ixs, color='r')
+        plot_points(ax, close_prices_filtered, troughs_ixs, color='b')
+    except:
+        major_peak_ix, minor_trough_ix, major_trough_ix = None, None, None
 
     return close_prices, major_peak_ix, minor_trough_ix, major_trough_ix
 
@@ -164,19 +167,27 @@ def run_for_ticker(ticker, ax_2008, ax_2020, text_ax):
     prices_2020, major_peak_2020, minor_trough_2020 = analyze_2020(ax_2020, ticker)
 
     # Compute necessary predictions
-    naive, normed = estimate_trough(prices_2008, major_peak_2008, minor_trough_2008, major_trough_2008,
-                                    prices_2020, major_peak_2020, minor_trough_2020)
+    if major_peak_2008 is not None and minor_trough_2008 is not None and major_trough_2008 is not None:
+        naive, normed = estimate_trough(prices_2008, major_peak_2008, minor_trough_2008, major_trough_2008,
+                                        prices_2020, major_peak_2020, minor_trough_2020)
+        plot_landmarks_arbitrary(ax_2020, prices_2020, [naive, normed], markers=['s', '<'])
 
-    plot_landmarks_arbitrary(ax_2020, prices_2020, [naive, normed], markers=['s', '<'])
+        ax_2008.set_title(f'{ticker} 2008')
+        ax_2020.set_title(f'{ticker} 2020')
 
-    ax_2008.set_title(f'{ticker} 2008')
-    ax_2020.set_title(f'{ticker} 2020')
+        ax_2008.tick_params(axis='both', which='major', labelsize=7)
+        ax_2020.tick_params(axis='both', which='major', labelsize=7)
 
-    ax_2008.tick_params(axis='both', which='major', labelsize=7)
-    ax_2020.tick_params(axis='both', which='major', labelsize=7)
-
-    draw_info(text_ax, prices_2008, major_peak_2008, minor_trough_2008, major_trough_2008,
+        draw_info(text_ax, prices_2008, major_peak_2008, minor_trough_2008, major_trough_2008,
               prices_2020, major_peak_2020, minor_trough_2020, naive, normed)
+    else:
+        ax_2008.set_title(f'{ticker} 2008')
+        ax_2020.set_title(f'{ticker} 2020')
+
+        ax_2008.tick_params(axis='both', which='major', labelsize=7)
+        ax_2020.tick_params(axis='both', which='major', labelsize=7)
+
+
 
 
 class NavigableStockPrices:
